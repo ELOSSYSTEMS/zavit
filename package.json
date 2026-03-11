@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:sources": "node ./scripts/validate-source-roster.mjs"
   },
   "dependencies": {
     "@prisma/client": "7.5.0",
