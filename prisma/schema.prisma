@@ -1,0 +1,424 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SourceLanguage {
+  HEBREW
+  ENGLISH
+  ARABIC
+}
+
+enum OwnershipType {
+  PRIVATE
+  PUBLIC
+  NGO
+  RELIGIOUS
+  UNKNOWN
+}
+
+enum EditorialType {
+  GENERAL_NEWS
+  BROADCAST
+  BUSINESS
+  RELIGIOUS
+  COMMUNITY
+  PUBLIC_SERVICE
+  OTHER
+}
+
+enum LocalityScope {
+  NATIONAL
+  REGIONAL
+  LOCAL
+  INTERNATIONAL
+}
+
+enum IngestMethod {
+  RSS
+  SITEMAP
+  SECTION_CRAWL
+  MANUAL
+}
+
+enum PaywallStatus {
+  FREE
+  PARTIAL
+  FULL
+  UNKNOWN
+}
+
+enum AvailabilityStatus {
+  ACTIVE
+  DEGRADED
+  TEMPORARILY_UNAVAILABLE
+  DISABLED
+}
+
+enum PipelineRunType {
+  INGEST
+  EMBED
+  VERIFY
+  PUBLISH
+  FULL
+}
+
+enum PipelineRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  PARTIAL
+  BLOCKED
+}
+
+enum FailureType {
+  FETCH
+  PARSE
+  NORMALIZE
+  DEDUPE
+  EMBED
+  VERIFY
+  PUBLISH
+  LEGAL_HOLD
+  UNKNOWN
+}
+
+enum EventStatus {
+  DRAFT
+  HELD
+  PUBLISHED
+  SUPPRESSED
+  ARCHIVED
+}
+
+enum ConfidenceState {
+  HIGH
+  LOW
+  REVIEW
+  REJECTED
+}
+
+enum MembershipRole {
+  PRIMARY
+  SUPPORTING
+  FOLLOW_UP
+}
+
+enum SupportType {
+  CONFIRMS
+  CONFLICTS
+  CONTEXT
+}
+
+enum EventReviewStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  CORRECTED
+  REJECTED
+}
+
+enum ReportType {
+  BAD_CLUSTER
+  WRONG_SOURCE
+  BROKEN_LINK
+  PUBLISHER_COMPLAINT
+  PUBLISHER_OPT_OUT
+  EMERGENCY_SUPPRESSION
+}
+
+enum CaseStatus {
+  NEW
+  ACKNOWLEDGED
+  UNDER_REVIEW
+  ACTION_REQUIRED
+  SUPPRESSED
+  RESOLVED
+  REJECTED
+}
+
+enum ActorRole {
+  REVIEWER
+  OPERATOR
+  SYSTEM
+}
+
+enum ActionType {
+  SOURCE_DISABLED
+  SOURCE_ENABLED
+  EVENT_SUPPRESSED
+  EVENT_UNSUPPRESSED
+  CASE_ACKNOWLEDGED
+  CASE_RESOLVED
+  REVIEW_UPDATED
+  PUBLISH_PROMOTED
+}
+
+model Source {
+  id                 String             @id @default(cuid())
+  slug               String             @unique
+  displayName        String
+  canonicalDomain    String             @unique
+  editorialBrand     String
+  ownershipName      String?
+  ownershipType      OwnershipType      @default(UNKNOWN)
+  editorialType      EditorialType      @default(OTHER)
+  localityScope      LocalityScope      @default(NATIONAL)
+  primaryLanguage    SourceLanguage
+  paywallStatus      PaywallStatus      @default(UNKNOWN)
+  availabilityStatus AvailabilityStatus @default(ACTIVE)
+  enabled            Boolean            @default(true)
+  sourcePolicyNotes  String?
+  independenceNotes  String?
+  ingestMethod       IngestMethod       @default(RSS)
+  feedUrl            String?
+  websiteUrl         String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  articles     Article[]
+  health       SourceHealth?
+  reports      CorrectionReport[]
+  operatorCase OperatorCase[]
+  audits       OperatorActionAudit[]
+
+  @@index([availabilityStatus, enabled])
+}
+
+model SourceHealth {
+  id                  String           @id @default(cuid())
+  sourceId            String           @unique
+  lastSuccessAt       DateTime?
+  lastFailureAt       DateTime?
+  failureType         FailureType?
+  consecutiveFailures Int              @default(0)
+  disabledReason      String?
+  staleWarningAt      DateTime?
+  updatedAt           DateTime         @updatedAt
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model PipelineRun {
+  id                String             @id @default(cuid())
+  runType           PipelineRunType
+  status            PipelineRunStatus  @default(QUEUED)
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  sourceCount       Int                @default(0)
+  articleCount      Int                @default(0)
+  heldEventCount    Int                @default(0)
+  publishedEventCount Int              @default(0)
+  modelProvider     String?
+  modelVersion      String?
+  errorSummary      String?
+  blockedReason     String?
+  createdAt         DateTime           @default(now())
+
+  articles         Article[]
+  events           Event[]
+  publishSnapshots PublishSnapshot[]
+
+  @@index([runType, status])
+}
+
+model Article {
+  id               String         @id @default(cuid())
+  sourceId         String
+  ingestRunId      String?
+  canonicalUrl     String         @unique
+  rawUrl           String
+  headline         String
+  snippet          String?
+  publishedAt      DateTime?
+  fetchedAt        DateTime       @default(now())
+  language         SourceLanguage
+  paywallFlag      Boolean        @default(false)
+  authorByline     String?
+  articleHash      String?
+  createdAt        DateTime       @default(now())
+
+  source          Source            @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  ingestRun       PipelineRun?      @relation(fields: [ingestRunId], references: [id], onDelete: SetNull)
+  memberships     EventMembership[]
+  factSupports    EventFactSupport[]
+
+  @@index([sourceId, publishedAt])
+}
+
+model Event {
+  id                String           @id @default(cuid())
+  publicId          String           @unique
+  verificationKey   String?          @unique
+  status            EventStatus      @default(DRAFT)
+  confidenceScore   Float?
+  confidenceState   ConfidenceState  @default(REVIEW)
+  neutralTitle      String?
+  aiTitle           String?
+  firstSeenAt       DateTime?
+  lastUpdatedAt     DateTime         @updatedAt
+  publishRunId      String?
+  publishedSnapshotId String?        @unique
+  lastReviewAt      DateTime?
+  suppressedAt      DateTime?
+  suppressionReason String?
+  createdAt         DateTime         @default(now())
+
+  publishRun       PipelineRun?      @relation(fields: [publishRunId], references: [id], onDelete: SetNull)
+  publishedSnapshot PublishSnapshot? @relation("PublishedSnapshot", fields: [publishedSnapshotId], references: [id], onDelete: SetNull)
+  memberships      EventMembership[]
+  facts            EventFact[]
+  reviews          EventReview[]
+  reports          CorrectionReport[]
+  operatorCases    OperatorCase[]
+  audits           OperatorActionAudit[]
+  publishSnapshots PublishSnapshot[] @relation("EventSnapshots")
+
+  @@index([status, confidenceState])
+}
+
+model EventMembership {
+  id               String         @id @default(cuid())
+  eventId          String
+  articleId        String
+  membershipRole   MembershipRole @default(SUPPORTING)
+  membershipReason String?
+  evidenceSummary  String?
+  createdAt        DateTime       @default(now())
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  article  Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, articleId])
+}
+
+model EventFact {
+  id              String          @id @default(cuid())
+  eventId         String
+  factType        String
+  textHe          String
+  confidenceState ConfidenceState @default(REVIEW)
+  displayOrder    Int             @default(0)
+  createdAt       DateTime        @default(now())
+
+  event    Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  supports EventFactSupport[]
+
+  @@index([eventId, displayOrder])
+}
+
+model EventFactSupport {
+  id          String      @id @default(cuid())
+  eventFactId String
+  articleId   String
+  supportType SupportType @default(CONFIRMS)
+  excerpt     String?
+
+  eventFact EventFact @relation(fields: [eventFactId], references: [id], onDelete: Cascade)
+  article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([eventFactId, articleId])
+}
+
+model EventReview {
+  id           String            @id @default(cuid())
+  eventId      String
+  reviewStatus EventReviewStatus @default(PENDING)
+  reviewerRole ActorRole         @default(REVIEWER)
+  reviewerRef  String?
+  reviewerNote String?
+  correctedAt  DateTime?
+  correctedBy  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, reviewStatus])
+}
+
+model CorrectionReport {
+  id           String     @id @default(cuid())
+  reportType   ReportType
+  eventId      String?
+  sourceId     String?
+  submittedAt  DateTime   @default(now())
+  status       CaseStatus @default(NEW)
+  payload      Json
+  abuseScore   Float?
+  contactEmail String?
+
+  event Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  source Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  cases  OperatorCase[]
+
+  @@index([reportType, status])
+}
+
+model OperatorCase {
+  id                   String     @id @default(cuid())
+  caseType             ReportType
+  status               CaseStatus @default(NEW)
+  reportId             String?
+  eventId              String?
+  sourceId             String?
+  assignedRole         ActorRole?
+  assignedTo           String?
+  acknowledgementBy    String?
+  acknowledgementAt    DateTime?
+  resolutionBy         String?
+  resolutionAt         DateTime?
+  emergencySuppressedAt DateTime?
+  notes                String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  report CorrectionReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  event  Event?            @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  source Source?           @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  audits OperatorActionAudit[]
+
+  @@index([caseType, status])
+}
+
+model PublishSnapshot {
+  id                String            @id @default(cuid())
+  eventId           String
+  pipelineRunId     String
+  publicStatus      EventStatus       @default(PUBLISHED)
+  publishedAt       DateTime          @default(now())
+  confidenceState   ConfidenceState
+  neutralTitle      String?
+  warningLabel      String?
+  feedRank          Int?
+  snapshotVersion   Int               @default(1)
+  createdAt         DateTime          @default(now())
+
+  event       Event       @relation("EventSnapshots", fields: [eventId], references: [id], onDelete: Cascade)
+  pipelineRun PipelineRun @relation(fields: [pipelineRunId], references: [id], onDelete: Cascade)
+  publishedEvent Event?   @relation("PublishedSnapshot")
+
+  @@index([pipelineRunId, publicStatus])
+}
+
+model OperatorActionAudit {
+  id          String     @id @default(cuid())
+  actionType  ActionType
+  actorRole   ActorRole
+  actorRef    String?
+  reason      String?
+  eventId     String?
+  sourceId    String?
+  operatorCaseId String?
+  createdAt   DateTime   @default(now())
+
+  event        Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  source       Source?       @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  operatorCase OperatorCase? @relation(fields: [operatorCaseId], references: [id], onDelete: SetNull)
+
+  @@index([actionType, createdAt])
+}
