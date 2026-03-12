@@ -1,82 +1,20 @@
 import Link from "next/link";
 
-import { prisma } from "@/lib/db/prisma";
 import { logoutAdminAction } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin/auth.mjs";
+import {
+  listAdminPipelineRuns,
+  listRecentOperatorAudits,
+  type AdminAuditEntry,
+  type AdminPipelineRun,
+} from "@/lib/server/repos/admin";
 
 export const dynamic = "force-dynamic";
 
-type AdminPipelineRun = {
-  id: string;
-  runType: string;
-  status: string;
-  startedAt: Date | null;
-  finishedAt: Date | null;
-  sourceCount: number;
-  articleCount: number;
-  heldEventCount: number;
-  publishedEventCount: number;
-  modelProvider: string | null;
-  modelVersion: string | null;
-  blockedReason: string | null;
-  errorSummary: string | null;
-};
-
-type AdminAuditEntry = {
-  id: string;
-  actionType: string;
-  actorRole: string;
-  actorRef: string | null;
-  createdAt: Date;
-  reason: string | null;
-  event: {
-    id: string;
-    publicId: string;
-  } | null;
-  source: {
-    displayName: string;
-  } | null;
-};
-
-async function getPipelineRuns(): Promise<AdminPipelineRun[]> {
-  try {
-    return (await prisma.pipelineRun.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 12,
-    })) as AdminPipelineRun[];
-  } catch {
-    return [];
-  }
-}
-
-async function getRecentAuditEntries(): Promise<AdminAuditEntry[]> {
-  try {
-    return (await prisma.operatorActionAudit.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        event: {
-          select: {
-            id: true,
-            publicId: true,
-          },
-        },
-        source: {
-          select: {
-            displayName: true,
-          },
-        },
-      },
-      take: 12,
-    })) as AdminAuditEntry[];
-  } catch {
-    return [];
-  }
-}
-
 export default async function AdminPipelinePage() {
   const session = (await requireAdminSession("REVIEWER", "/admin/pipeline"))!;
-  const runs = await getPipelineRuns();
-  const audits = await getRecentAuditEntries();
+  const runs = await listAdminPipelineRuns();
+  const audits = await listRecentOperatorAudits();
 
   return (
     <main className="shell">

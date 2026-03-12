@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { logoutAdminAction, toggleEventSuppressionAction } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin/auth.mjs";
-import { prisma } from "@/lib/db/prisma";
+import {
+  getAdminEventDetail,
+  type AdminEventDetail,
+} from "@/lib/server/repos/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -13,85 +16,12 @@ type AdminEventPageProps = {
   }>;
 };
 
-type AdminEventDetail = {
-  id: string;
-  publicId: string;
-  status: string;
-  confidenceState: string;
-  confidenceScore: number | null;
-  suppressionReason: string | null;
-  publishedSnapshot: {
-    publishedAt: Date;
-  } | null;
-  memberships: Array<{
-    id: string;
-    membershipRole: string;
-    membershipReason: string | null;
-    article: {
-      headline: string;
-      snippet: string | null;
-      publishedAt: Date | null;
-      source: {
-        displayName: string;
-      };
-    };
-  }>;
-  publishSnapshots: Array<{
-    id: string;
-    snapshotVersion: number;
-    publicStatus: string;
-    publishedAt: Date;
-    confidenceState: string;
-    warningLabel: string | null;
-  }>;
-  audits: Array<{
-    id: string;
-    actionType: string;
-    actorRole: string;
-    actorRef: string | null;
-    createdAt: Date;
-    reason: string | null;
-  }>;
-};
-
-async function getEvent(id: string): Promise<AdminEventDetail | null> {
-  try {
-    return (await prisma.event.findFirst({
-      where: {
-        OR: [{ publicId: id }, { id }],
-      },
-      include: {
-        memberships: {
-          include: {
-            article: {
-              include: {
-                source: true,
-              },
-            },
-          },
-        },
-        publishedSnapshot: true,
-        publishSnapshots: {
-          orderBy: { publishedAt: "desc" },
-          take: 3,
-        },
-        audits: {
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-      },
-    })) as AdminEventDetail | null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function AdminEventPage({
   params,
 }: AdminEventPageProps) {
   const session = (await requireAdminSession("REVIEWER", "/admin/pipeline"))!;
   const { id } = await params;
-  const event = await getEvent(id);
+  const event = await getAdminEventDetail(id);
 
   if (!event) {
     notFound();

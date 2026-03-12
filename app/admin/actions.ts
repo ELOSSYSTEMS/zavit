@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { prisma } from "@/lib/db/prisma";
 import {
   authenticateAdminCredentials,
   buildAdminLoginPath,
@@ -16,23 +15,23 @@ import {
   setAdminSession,
 } from "@/lib/admin/auth.mjs";
 import {
-  getCaseActionAuditType,
-  resolveCaseStatusTransition,
-} from "@/lib/reports/workflow.mjs";
+  toggleEventSuppression,
+  toggleSourceAvailability,
+  updateOperatorCaseStatus,
+} from "@/lib/server/repos/admin";
 
 function getFormValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-type AdminTransactionClient = Pick<
-  typeof prisma,
-  | "source"
-  | "sourceHealth"
-  | "operatorActionAudit"
-  | "event"
-  | "operatorCase"
-  | "correctionReport"
->;
+const validCaseActions = new Set([
+  "acknowledge",
+  "start_review",
+  "request_action",
+  "mark_suppressed",
+  "resolve",
+  "reject",
+]);
 
 export async function loginAdminAction(formData: FormData) {
   const nextPath = normalizeAdminNextPath(
@@ -73,36 +72,11 @@ export async function toggleSourceAvailabilityAction(formData: FormData) {
   }
 
   const disabling = operation === "disable";
-
-  await prisma.$transaction(async (tx: AdminTransactionClient) => {
-    await tx.source.update({
-      where: { id: sourceId },
-      data: {
-        enabled: !disabling,
-        availabilityStatus: disabling ? "DISABLED" : "ACTIVE",
-      },
-    });
-
-    await tx.sourceHealth.upsert({
-      where: { sourceId },
-      update: {
-        disabledReason: disabling ? reason : null,
-      },
-      create: {
-        sourceId,
-        disabledReason: disabling ? reason : null,
-      },
-    });
-
-    await tx.operatorActionAudit.create({
-      data: {
-        actionType: disabling ? "SOURCE_DISABLED" : "SOURCE_ENABLED",
-        actorRole: "OPERATOR",
-        actorRef: session.email,
-        reason,
-        sourceId,
-      },
-    });
+  await toggleSourceAvailability({
+    sourceId,
+    disable: disabling,
+    reason,
+    actorRef: session.email,
   });
 
   revalidatePath("/admin/pipeline");
@@ -124,52 +98,21 @@ export async function toggleEventSuppressionAction(formData: FormData) {
     redirect(redirectTo);
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: {
-      id: true,
-      publicId: true,
-      publishedSnapshotId: true,
-    },
+  const event = await toggleEventSuppression({
+    eventId,
+    suppress: operation === "suppress",
+    reason,
+    actorRef: session.email,
   });
 
   if (!event) {
     redirect(redirectTo);
   }
 
-  const suppressing = operation === "suppress";
-
-  await prisma.$transaction(async (tx: AdminTransactionClient) => {
-    await tx.event.update({
-      where: { id: event.id },
-      data: suppressing
-        ? {
-            status: "SUPPRESSED",
-            suppressedAt: new Date(),
-            suppressionReason: reason,
-          }
-        : {
-            status: event.publishedSnapshotId ? "PUBLISHED" : "HELD",
-            suppressedAt: null,
-            suppressionReason: null,
-          },
-    });
-
-    await tx.operatorActionAudit.create({
-      data: {
-        actionType: suppressing ? "EVENT_SUPPRESSED" : "EVENT_UNSUPPRESSED",
-        actorRole: "OPERATOR",
-        actorRef: session.email,
-        reason,
-        eventId: event.id,
-      },
-    });
-  });
-
   revalidatePath("/");
   revalidatePath(`/events/${event.publicId}`);
   revalidatePath("/admin/pipeline");
-  revalidatePath(`/admin/events/${event.id}`);
+  revalidatePath(`/admin/events/${event.eventId}`);
   redirect(redirectTo);
 }
 
@@ -187,104 +130,24 @@ export async function updateOperatorCaseStatusAction(formData: FormData) {
     redirect(redirectTo);
   }
 
-  const nextStatus = resolveCaseStatusTransition(action);
-  const operatorCase = await prisma.operatorCase.findUnique({
-    where: { id: operatorCaseId },
-    include: {
-      event: {
-        select: {
-          id: true,
-          publicId: true,
-          status: true,
-        },
-      },
-      source: {
-        select: {
-          id: true,
-          enabled: true,
-        },
-      },
-    },
-  });
-
-  if (!operatorCase) {
+  if (!validCaseActions.has(action)) {
     redirect(redirectTo);
   }
 
-  if (
-    nextStatus === "SUPPRESSED" &&
-    operatorCase.event?.status !== "SUPPRESSED" &&
-    operatorCase.source?.enabled !== false
-  ) {
+  const result = await updateOperatorCaseStatus({
+    operatorCaseId,
+    action,
+    reason,
+    actorRef: session.email,
+  });
+
+  if (!result) {
     redirect(redirectTo);
   }
-
-  const now = new Date();
-  const updateData: {
-    status: "ACKNOWLEDGED" | "UNDER_REVIEW" | "ACTION_REQUIRED" | "SUPPRESSED" | "RESOLVED" | "REJECTED";
-    acknowledgementAt?: Date;
-    acknowledgementBy?: string;
-    assignedRole?: "REVIEWER" | "OPERATOR";
-    assignedTo?: string;
-    resolutionAt?: Date;
-    resolutionBy?: string;
-    emergencySuppressedAt?: Date;
-    notes?: string;
-  } = {
-    status: nextStatus,
-    notes: reason,
-  };
-
-  if (nextStatus === "ACKNOWLEDGED") {
-    updateData.acknowledgementAt = now;
-    updateData.acknowledgementBy = session.email;
-  }
-
-  if (["UNDER_REVIEW", "ACTION_REQUIRED"].includes(nextStatus)) {
-    updateData.assignedRole = "OPERATOR";
-    updateData.assignedTo = session.email;
-  }
-
-  if (["RESOLVED", "REJECTED"].includes(nextStatus)) {
-    updateData.resolutionAt = now;
-    updateData.resolutionBy = session.email;
-  }
-
-  if (nextStatus === "SUPPRESSED") {
-    updateData.emergencySuppressedAt = now;
-  }
-
-  await prisma.$transaction(async (tx: AdminTransactionClient) => {
-    await tx.operatorCase.update({
-      where: { id: operatorCase.id },
-      data: updateData,
-    });
-
-    if (operatorCase.reportId) {
-      await tx.correctionReport.update({
-        where: { id: operatorCase.reportId },
-        data: {
-          status: nextStatus,
-        },
-      });
-    }
-
-    await tx.operatorActionAudit.create({
-      data: {
-        actionType: getCaseActionAuditType(nextStatus),
-        actorRole: "OPERATOR",
-        actorRef: session.email,
-        reason,
-        eventId: operatorCase.eventId,
-        sourceId: operatorCase.sourceId,
-        operatorCaseId: operatorCase.id,
-      },
-    });
-  });
 
   revalidatePath("/admin/cases");
-  if (operatorCase.event?.id) {
-    revalidatePath(`/admin/events/${operatorCase.event.id}`);
+  if (result.eventId) {
+    revalidatePath(`/admin/events/${result.eventId}`);
   }
   redirect(redirectTo);
 }

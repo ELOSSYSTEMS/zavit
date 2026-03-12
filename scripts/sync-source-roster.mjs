@@ -1,23 +1,7 @@
 import "dotenv/config";
 
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
 import { loadApprovedRoster, mapRosterSourceToSourceRecord } from "../lib/ingest/roster.mjs";
-
-const connectionString =
-  process.env.DATABASE_URL_UNPOOLED ??
-  process.env.DATABASE_URL ??
-  process.env.POSTGRES_PRISMA_URL ??
-  process.env.POSTGRES_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL or DATABASE_URL_UNPOOLED is required for source sync.");
-}
-
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString }),
-});
+import { prisma } from "../lib/server/db/client.mjs";
 
 async function main() {
   const roster = loadApprovedRoster();

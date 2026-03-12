@@ -2,74 +2,13 @@ import Link from "next/link";
 
 import { logoutAdminAction, updateOperatorCaseStatusAction } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin/auth.mjs";
-import { prisma } from "@/lib/db/prisma";
 import { getSlaState } from "@/lib/reports/workflow.mjs";
+import {
+  listAdminOperatorCases,
+  type AdminOperatorCase,
+} from "@/lib/server/repos/admin";
 
 export const dynamic = "force-dynamic";
-
-type AdminOperatorCase = {
-  id: string;
-  caseType: string;
-  status: string;
-  reportId: string | null;
-  eventId: string | null;
-  sourceId: string | null;
-  assignedRole: string | null;
-  assignedTo: string | null;
-  acknowledgementBy: string | null;
-  acknowledgementAt: Date | null;
-  resolutionBy: string | null;
-  resolutionAt: Date | null;
-  emergencySuppressedAt: Date | null;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  report: {
-    contactEmail: string | null;
-    abuseScore: number | null;
-    payload: unknown;
-  } | null;
-  event: {
-    id: string;
-    publicId: string;
-    status: string;
-  } | null;
-  source: {
-    id: string;
-    displayName: string;
-    slug: string;
-    enabled: boolean;
-  } | null;
-};
-
-async function getOperatorCases(): Promise<AdminOperatorCase[]> {
-  try {
-    return await prisma.operatorCase.findMany({
-      orderBy: { updatedAt: "desc" },
-      include: {
-        report: true,
-        event: {
-          select: {
-            id: true,
-            publicId: true,
-            status: true,
-          },
-        },
-        source: {
-          select: {
-            id: true,
-            displayName: true,
-            slug: true,
-            enabled: true,
-          },
-        },
-      },
-      take: 30,
-    });
-  } catch {
-    return [];
-  }
-}
 
 const caseActions = [
   { value: "acknowledge", label: "Acknowledge" },
@@ -82,7 +21,7 @@ const caseActions = [
 
 export default async function AdminCasesPage() {
   const session = (await requireAdminSession("REVIEWER", "/admin/cases"))!;
-  const cases = await getOperatorCases();
+  const cases = await listAdminOperatorCases();
 
   return (
     <main className="shell">

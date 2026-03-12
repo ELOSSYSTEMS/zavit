@@ -1,76 +1,19 @@
-import { prisma } from "@/lib/db/prisma";
 import { logoutAdminAction, toggleSourceAvailabilityAction } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin/auth.mjs";
 import Link from "next/link";
+import {
+  listAdminSources,
+  listRecentSourceAudits,
+  type AdminSourceAudit,
+  type AdminSourceRecord,
+} from "@/lib/server/repos/admin";
 
 export const dynamic = "force-dynamic";
 
-type AdminSourceRow = {
-  id: string;
-  slug: string;
-  displayName: string;
-  ingestMethod: string;
-  enabled: boolean;
-  availabilityStatus: string;
-  health: {
-    lastSuccessAt: Date | null;
-    lastFailureAt: Date | null;
-    consecutiveFailures: number;
-    failureType: string | null;
-  } | null;
-};
-
-type AdminSourceAudit = {
-  id: string;
-  actionType: string;
-  actorRef: string | null;
-  createdAt: Date;
-  reason: string | null;
-  source: {
-    displayName: string;
-  } | null;
-};
-
-async function getAdminSourceRows(): Promise<AdminSourceRow[]> {
-  try {
-    return (await prisma.source.findMany({
-      orderBy: { displayName: "asc" },
-      include: {
-        health: true,
-      },
-    })) as AdminSourceRow[];
-  } catch {
-    return [];
-  }
-}
-
-async function getRecentSourceAudits(): Promise<AdminSourceAudit[]> {
-  try {
-    return (await prisma.operatorActionAudit.findMany({
-      where: {
-        sourceId: {
-          not: null,
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        source: {
-          select: {
-            displayName: true,
-          },
-        },
-      },
-      take: 12,
-    })) as AdminSourceAudit[];
-  } catch {
-    return [];
-  }
-}
-
 export default async function AdminSourcesPage() {
   const session = (await requireAdminSession("REVIEWER", "/admin/sources"))!;
-  const sources = await getAdminSourceRows();
-  const audits = await getRecentSourceAudits();
+  const sources = await listAdminSources();
+  const audits = await listRecentSourceAudits();
 
   return (
     <main className="shell">
@@ -105,7 +48,7 @@ export default async function AdminSourcesPage() {
             <p>No source records are available yet. Run source sync and ingest first.</p>
           ) : (
             <ul className="stack-list">
-              {sources.map((source: AdminSourceRow) => (
+              {sources.map((source: AdminSourceRecord) => (
                 <li key={source.slug} className="stack-list__item">
                   <h2>{source.displayName}</h2>
                   <p>

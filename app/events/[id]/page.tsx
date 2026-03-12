@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/db/prisma";
+import {
+  getPublishedEventDetail,
+  type PublishedEventDetail,
+} from "@/lib/server/repos/public";
 
 type EventPageProps = {
   params: Promise<{
@@ -9,58 +12,9 @@ type EventPageProps = {
   }>;
 };
 
-type PublicEventDetail = {
-  publicId: string;
-  neutralTitle: string | null;
-  confidenceState: string;
-  lastUpdatedAt: Date;
-  publishedSnapshot: {
-    neutralTitle: string | null;
-    confidenceState: string;
-    warningLabel: string | null;
-  } | null;
-  memberships: Array<{
-    id: string;
-    article: {
-      headline: string;
-      canonicalUrl: string;
-      snippet: string | null;
-      publishedAt: Date | null;
-      source: {
-        displayName: string;
-      };
-    };
-  }>;
-};
-
-async function getPublishedEvent(publicId: string): Promise<PublicEventDetail | null> {
-  try {
-    return (await prisma.event.findFirst({
-      where: {
-        publicId,
-        status: "PUBLISHED",
-      },
-      include: {
-        memberships: {
-          include: {
-            article: {
-              include: {
-                source: true,
-              },
-            },
-          },
-        },
-        publishedSnapshot: true,
-      },
-    })) as PublicEventDetail | null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params;
-  const event = await getPublishedEvent(id);
+  const event = await getPublishedEventDetail(id);
 
   if (!event) {
     notFound();
@@ -92,7 +46,7 @@ export default async function EventPage({ params }: EventPageProps) {
         <section className="panel">
           <h2>Coverage</h2>
           <ul className="stack-list">
-            {event.memberships.map((membership: PublicEventDetail["memberships"][number]) => (
+            {event.memberships.map((membership: PublishedEventDetail["memberships"][number]) => (
               <li key={membership.id} className="stack-list__item">
                 <h3>{membership.article.headline}</h3>
                 <p>
