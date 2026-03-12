@@ -9,6 +9,7 @@ This Step 6 artifact accepts the evaluation harness format, metric definitions, 
 - Dataset: [labeled-clustering-dataset.v1.json](../../tests/fixtures/evaluation/labeled-clustering-dataset.v1.json)
 - Sample predictions: [predictions-sample-pass.v1.json](../../tests/fixtures/evaluation/predictions-sample-pass.v1.json)
 - Runner: [run-clustering-eval.mjs](../../scripts/run-clustering-eval.mjs)
+- Reproducibility check: [check-clustering-eval-repro.mjs](../../scripts/check-clustering-eval-repro.mjs)
 
 ## Active Thresholds
 
@@ -26,6 +27,7 @@ This Step 6 artifact accepts the evaluation harness format, metric definitions, 
 - hold rate: `0.0000`
 - publish-eligible precision: `1.0000`
 - publish-eligible recall: `1.0000`
+- reproducibility check: `PASS`
 
 ## Limitation
 

@@ -4,6 +4,7 @@
 
 - `npm run test:evaluation`
 - `npm run eval:clustering`
+- `npm run eval:clustering:repro`
 - `npm run lint`
 - `npm run typecheck`
 
@@ -24,6 +25,7 @@
   - hold rate: `0.0000`
   - publish-eligible precision: `1.0000`
   - publish-eligible recall: `1.0000`
+- `npm run eval:clustering:repro`: passed
 - `npm run lint`: passed
 - `npm run typecheck`: passed
 

@@ -4,6 +4,7 @@
 
 - Added a metadata-only labeled clustering dataset at [labeled-clustering-dataset.v1.json](../../../../tests/fixtures/evaluation/labeled-clustering-dataset.v1.json).
 - Added a prediction-format evaluation runner at [run-clustering-eval.mjs](../../../../scripts/run-clustering-eval.mjs) backed by [clustering-eval.mjs](../../../../lib/evaluation/clustering-eval.mjs).
+- Added a dedicated reproducibility check at [check-clustering-eval-repro.mjs](../../../../scripts/check-clustering-eval-repro.mjs) so the Step 6 report format is verified as stable for the same dataset and prediction artifact.
 - Added a sample passing prediction artifact at [predictions-sample-pass.v1.json](../../../../tests/fixtures/evaluation/predictions-sample-pass.v1.json) so the report format and threshold logic can be exercised deterministically.
 - Updated [evaluation-gate.md](../../../../docs/evaluation-gate.md) with exact metric formulas, artifact definitions, and numeric Step 6 thresholds.
 - Added a human-readable acceptance artifact at [clustering-eval-baseline.md](../../../../docs/artifacts/clustering-eval-baseline.md).
@@ -13,6 +14,7 @@
 - `project/package.json`
 - `project/lib/evaluation/clustering-eval.mjs`
 - `project/scripts/run-clustering-eval.mjs`
+- `project/scripts/check-clustering-eval-repro.mjs`
 - `project/tests/fixtures/evaluation/*.json`
 - `project/tests/evaluation/clustering-eval.test.mjs`
 - `project/docs/evaluation-gate.md`

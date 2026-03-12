@@ -2,7 +2,7 @@
 
 ## Status
 
-Step 1 draft on 2026-03-12
+Step 6 accepted on 2026-03-12
 
 ## Purpose
 
@@ -60,6 +60,7 @@ Before Step 7 publish logic is accepted, the project must have:
 
 - Dataset: [labeled-clustering-dataset.v1.json](../tests/fixtures/evaluation/labeled-clustering-dataset.v1.json)
 - Runner: [run-clustering-eval.mjs](../scripts/run-clustering-eval.mjs)
+- Reproducibility check: [check-clustering-eval-repro.mjs](../scripts/check-clustering-eval-repro.mjs)
 - Acceptance report: [clustering-eval-baseline.md](./artifacts/clustering-eval-baseline.md)
 
 These definitions are not Step 1 blockers and do not block Step 2 scaffolding. They are build-stopping for Step 6 harness acceptance and Step 7 public publish logic.

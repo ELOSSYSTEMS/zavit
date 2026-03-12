@@ -14,7 +14,8 @@
     "db:push": "npx prisma db push",
     "seed:sources": "node ./scripts/sync-source-roster.mjs",
     "ingest:sources": "node ./scripts/run-ingest.mjs",
-    "eval:clustering": "node ./scripts/run-clustering-eval.mjs"
+    "eval:clustering": "node ./scripts/run-clustering-eval.mjs",
+    "eval:clustering:repro": "node ./scripts/check-clustering-eval-repro.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",

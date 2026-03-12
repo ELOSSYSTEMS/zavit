@@ -10,6 +10,7 @@ Before Step 7 work, read these first:
 - [evaluation-gate.md](../../../../docs/evaluation-gate.md)
 - [clustering-eval.mjs](../../../../lib/evaluation/clustering-eval.mjs)
 - [run-clustering-eval.mjs](../../../../scripts/run-clustering-eval.mjs)
+- [check-clustering-eval-repro.mjs](../../../../scripts/check-clustering-eval-repro.mjs)
 - [labeled-clustering-dataset.v1.json](../../../../tests/fixtures/evaluation/labeled-clustering-dataset.v1.json)
 - [predictions-sample-pass.v1.json](../../../../tests/fixtures/evaluation/predictions-sample-pass.v1.json)
 
