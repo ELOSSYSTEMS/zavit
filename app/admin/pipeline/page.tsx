@@ -6,20 +6,52 @@ import { requireAdminSession } from "@/lib/admin/auth.mjs";
 
 export const dynamic = "force-dynamic";
 
-async function getPipelineRuns() {
+type AdminPipelineRun = {
+  id: string;
+  runType: string;
+  status: string;
+  startedAt: Date | null;
+  finishedAt: Date | null;
+  sourceCount: number;
+  articleCount: number;
+  heldEventCount: number;
+  publishedEventCount: number;
+  modelProvider: string | null;
+  modelVersion: string | null;
+  blockedReason: string | null;
+  errorSummary: string | null;
+};
+
+type AdminAuditEntry = {
+  id: string;
+  actionType: string;
+  actorRole: string;
+  actorRef: string | null;
+  createdAt: Date;
+  reason: string | null;
+  event: {
+    id: string;
+    publicId: string;
+  } | null;
+  source: {
+    displayName: string;
+  } | null;
+};
+
+async function getPipelineRuns(): Promise<AdminPipelineRun[]> {
   try {
-    return await prisma.pipelineRun.findMany({
+    return (await prisma.pipelineRun.findMany({
       orderBy: { createdAt: "desc" },
       take: 12,
-    });
+    })) as AdminPipelineRun[];
   } catch {
     return [];
   }
 }
 
-async function getRecentAuditEntries() {
+async function getRecentAuditEntries(): Promise<AdminAuditEntry[]> {
   try {
-    return await prisma.operatorActionAudit.findMany({
+    return (await prisma.operatorActionAudit.findMany({
       orderBy: { createdAt: "desc" },
       include: {
         event: {
@@ -35,7 +67,7 @@ async function getRecentAuditEntries() {
         },
       },
       take: 12,
-    });
+    })) as AdminAuditEntry[];
   } catch {
     return [];
   }
@@ -79,7 +111,7 @@ export default async function AdminPipelinePage() {
             <p>No pipeline runs are available yet.</p>
           ) : (
             <ul className="stack-list">
-              {runs.map((run) => (
+              {runs.map((run: AdminPipelineRun) => (
                 <li key={run.id} className="stack-list__item">
                   <h2>
                     {run.runType} · {run.status}
@@ -108,7 +140,7 @@ export default async function AdminPipelinePage() {
             <p>No operator audit entries exist yet.</p>
           ) : (
             <ul className="stack-list">
-              {audits.map((audit) => (
+              {audits.map((audit: AdminAuditEntry) => (
                 <li key={audit.id} className="stack-list__item">
                   <h3>
                     {audit.actionType} · {audit.actorRole}

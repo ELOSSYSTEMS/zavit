@@ -50,7 +50,7 @@ export default async function SourcesPage() {
             <p>No source records are available yet. Run source sync and ingest first.</p>
           ) : (
             <ul className="stack-list">
-              {sources.map((source) => (
+              {sources.map((source: PublicSourceRow) => (
                 <li key={source.slug} className="stack-list__item">
                   <h2>{source.displayName}</h2>
                   <p>

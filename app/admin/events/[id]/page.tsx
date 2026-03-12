@@ -13,9 +13,50 @@ type AdminEventPageProps = {
   }>;
 };
 
-async function getEvent(id: string) {
+type AdminEventDetail = {
+  id: string;
+  publicId: string;
+  status: string;
+  confidenceState: string;
+  confidenceScore: number | null;
+  suppressionReason: string | null;
+  publishedSnapshot: {
+    publishedAt: Date;
+  } | null;
+  memberships: Array<{
+    id: string;
+    membershipRole: string;
+    membershipReason: string | null;
+    article: {
+      headline: string;
+      snippet: string | null;
+      publishedAt: Date | null;
+      source: {
+        displayName: string;
+      };
+    };
+  }>;
+  publishSnapshots: Array<{
+    id: string;
+    snapshotVersion: number;
+    publicStatus: string;
+    publishedAt: Date;
+    confidenceState: string;
+    warningLabel: string | null;
+  }>;
+  audits: Array<{
+    id: string;
+    actionType: string;
+    actorRole: string;
+    actorRef: string | null;
+    createdAt: Date;
+    reason: string | null;
+  }>;
+};
+
+async function getEvent(id: string): Promise<AdminEventDetail | null> {
   try {
-    return await prisma.event.findFirst({
+    return (await prisma.event.findFirst({
       where: {
         OR: [{ publicId: id }, { id }],
       },
@@ -39,7 +80,7 @@ async function getEvent(id: string) {
           take: 10,
         },
       },
-    });
+    })) as AdminEventDetail | null;
   } catch {
     return null;
   }
@@ -142,7 +183,7 @@ export default async function AdminEventPage({
             <p>No event memberships were materialized for this event.</p>
           ) : (
             <ul className="stack-list">
-              {event.memberships.map((membership) => (
+              {event.memberships.map((membership: AdminEventDetail["memberships"][number]) => (
                 <li key={membership.id} className="stack-list__item">
                   <h3>{membership.article.headline}</h3>
                   <p>
@@ -162,7 +203,7 @@ export default async function AdminEventPage({
             <p>No event audit entries exist yet.</p>
           ) : (
             <ul className="stack-list">
-              {event.audits.map((audit) => (
+              {event.audits.map((audit: AdminEventDetail["audits"][number]) => (
                 <li key={audit.id} className="stack-list__item">
                   <h3>
                     {audit.actionType} · {audit.actorRole}
@@ -182,7 +223,7 @@ export default async function AdminEventPage({
             <p>No publish snapshots exist yet.</p>
           ) : (
             <ul className="stack-list">
-              {event.publishSnapshots.map((snapshot) => (
+              {event.publishSnapshots.map((snapshot: AdminEventDetail["publishSnapshots"][number]) => (
                 <li key={snapshot.id} className="stack-list__item">
                   <p>
                     v{snapshot.snapshotVersion} · {snapshot.publicStatus} ·{" "}

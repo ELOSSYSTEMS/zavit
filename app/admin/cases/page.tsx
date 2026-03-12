@@ -117,7 +117,7 @@ export default async function AdminCasesPage() {
             <p>No reports or operator cases are available yet.</p>
           ) : (
             <ul className="stack-list">
-              {cases.map((operatorCase) => {
+              {cases.map((operatorCase: AdminOperatorCase) => {
                 const slaState = getSlaState({
                   reportType: operatorCase.caseType,
                   createdAt: operatorCase.createdAt,
@@ -161,7 +161,7 @@ export default async function AdminCasesPage() {
                         <label className="field">
                           <span>Case action</span>
                           <select className="form-input" defaultValue="acknowledge" name="action">
-                            {caseActions.map((action) => (
+                            {caseActions.map((action: (typeof caseActions)[number]) => (
                               <option key={action.value} value={action.value}>
                                 {action.label}
                               </option>

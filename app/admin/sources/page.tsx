@@ -20,6 +20,17 @@ type AdminSourceRow = {
   } | null;
 };
 
+type AdminSourceAudit = {
+  id: string;
+  actionType: string;
+  actorRef: string | null;
+  createdAt: Date;
+  reason: string | null;
+  source: {
+    displayName: string;
+  } | null;
+};
+
 async function getAdminSourceRows(): Promise<AdminSourceRow[]> {
   try {
     return (await prisma.source.findMany({
@@ -33,9 +44,9 @@ async function getAdminSourceRows(): Promise<AdminSourceRow[]> {
   }
 }
 
-async function getRecentSourceAudits() {
+async function getRecentSourceAudits(): Promise<AdminSourceAudit[]> {
   try {
-    return await prisma.operatorActionAudit.findMany({
+    return (await prisma.operatorActionAudit.findMany({
       where: {
         sourceId: {
           not: null,
@@ -50,7 +61,7 @@ async function getRecentSourceAudits() {
         },
       },
       take: 12,
-    });
+    })) as AdminSourceAudit[];
   } catch {
     return [];
   }
@@ -94,7 +105,7 @@ export default async function AdminSourcesPage() {
             <p>No source records are available yet. Run source sync and ingest first.</p>
           ) : (
             <ul className="stack-list">
-              {sources.map((source) => (
+              {sources.map((source: AdminSourceRow) => (
                 <li key={source.slug} className="stack-list__item">
                   <h2>{source.displayName}</h2>
                   <p>
@@ -158,7 +169,7 @@ export default async function AdminSourcesPage() {
             <p>No source audit entries exist yet.</p>
           ) : (
             <ul className="stack-list">
-              {audits.map((audit) => (
+              {audits.map((audit: AdminSourceAudit) => (
                 <li key={audit.id} className="stack-list__item">
                   <h3>
                     {audit.actionType} · {audit.source?.displayName ?? "unknown source"}

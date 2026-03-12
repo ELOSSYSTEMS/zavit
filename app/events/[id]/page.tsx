@@ -9,9 +9,33 @@ type EventPageProps = {
   }>;
 };
 
-async function getPublishedEvent(publicId: string) {
+type PublicEventDetail = {
+  publicId: string;
+  neutralTitle: string | null;
+  confidenceState: string;
+  lastUpdatedAt: Date;
+  publishedSnapshot: {
+    neutralTitle: string | null;
+    confidenceState: string;
+    warningLabel: string | null;
+  } | null;
+  memberships: Array<{
+    id: string;
+    article: {
+      headline: string;
+      canonicalUrl: string;
+      snippet: string | null;
+      publishedAt: Date | null;
+      source: {
+        displayName: string;
+      };
+    };
+  }>;
+};
+
+async function getPublishedEvent(publicId: string): Promise<PublicEventDetail | null> {
   try {
-    return await prisma.event.findFirst({
+    return (await prisma.event.findFirst({
       where: {
         publicId,
         status: "PUBLISHED",
@@ -28,7 +52,7 @@ async function getPublishedEvent(publicId: string) {
         },
         publishedSnapshot: true,
       },
-    });
+    })) as PublicEventDetail | null;
   } catch {
     return null;
   }
@@ -68,7 +92,7 @@ export default async function EventPage({ params }: EventPageProps) {
         <section className="panel">
           <h2>Coverage</h2>
           <ul className="stack-list">
-            {event.memberships.map((membership) => (
+            {event.memberships.map((membership: PublicEventDetail["memberships"][number]) => (
               <li key={membership.id} className="stack-list__item">
                 <h3>{membership.article.headline}</h3>
                 <p>

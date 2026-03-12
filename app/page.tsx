@@ -68,7 +68,7 @@ export default async function Home() {
           <p>No published events are available yet. Run the Step 7 event pipeline first.</p>
         ) : (
           <ul className="stack-list">
-            {feed.map((snapshot) => (
+            {feed.map((snapshot: FeedSnapshot) => (
               <li key={snapshot.event.publicId} className="stack-list__item">
                 <h2>{snapshot.event.neutralTitle ?? snapshot.event.publicId}</h2>
                 <p>
