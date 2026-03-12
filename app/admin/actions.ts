@@ -15,6 +15,7 @@ import {
   setAdminSession,
 } from "@/lib/admin/auth.mjs";
 import {
+  refreshAdminPipeline,
   toggleEventSuppression,
   toggleSourceAvailability,
   updateOperatorCaseStatus,
@@ -150,4 +151,39 @@ export async function updateOperatorCaseStatusAction(formData: FormData) {
     revalidatePath(`/admin/events/${result.eventId}`);
   }
   redirect(redirectTo);
+}
+
+export async function refreshPipelineAction(formData: FormData) {
+  const redirectTo = getSafeAdminRedirect(
+    getFormValue(formData, "redirectTo"),
+    "/admin/pipeline",
+  );
+  await requireAdminSession("OPERATOR", redirectTo);
+  const provider = process.env.CLUSTER_EMBED_PROVIDER ?? "gemini";
+
+  try {
+    const { ingestResult, pipelineRun } = await refreshAdminPipeline({ provider });
+    const params = new URLSearchParams({
+      refresh: "success",
+      ingestStatus: ingestResult.status,
+      pipelineStatus: pipelineRun.status,
+    });
+
+    if (pipelineRun.blockedReason) {
+      params.set("blocked", "1");
+    }
+
+    revalidatePath("/");
+    revalidatePath("/admin/pipeline");
+    revalidatePath("/admin/sources");
+
+    redirect(`${redirectTo}?${params.toString()}`);
+  } catch (error) {
+    const params = new URLSearchParams({
+      refresh: "error",
+      message: error instanceof Error ? error.message.slice(0, 180) : "Unknown pipeline refresh failure.",
+    });
+
+    redirect(`${redirectTo}?${params.toString()}`);
+  }
 }
