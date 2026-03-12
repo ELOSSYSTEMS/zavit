@@ -1,5 +1,6 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -64,7 +65,7 @@ export async function toggleSourceAvailabilityAction(formData: FormData) {
 
   const disabling = operation === "disable";
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.source.update({
       where: { id: sourceId },
       data: {
@@ -129,7 +130,7 @@ export async function toggleEventSuppressionAction(formData: FormData) {
 
   const suppressing = operation === "suppress";
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.event.update({
       where: { id: event.id },
       data: suppressing
@@ -244,7 +245,7 @@ export async function updateOperatorCaseStatusAction(formData: FormData) {
     updateData.emergencySuppressedAt = now;
   }
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.operatorCase.update({
       where: { id: operatorCase.id },
       data: updateData,
