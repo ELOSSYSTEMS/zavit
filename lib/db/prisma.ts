@@ -1,12 +1,9 @@
 import * as PrismaClientPackage from "@prisma/client";
 import * as PrismaPgPackage from "@prisma/adapter-pg";
+import type { PrismaClient as PrismaClientType } from "@prisma/client";
 
 const { PrismaClient } = PrismaClientPackage as unknown as {
-  PrismaClient: new (options?: { adapter: unknown }) => {
-    source: {
-      findMany: (...args: unknown[]) => Promise<unknown>;
-    };
-  };
+  PrismaClient: new (options?: { adapter: unknown }) => PrismaClientType;
 };
 const { PrismaPg } = PrismaPgPackage as unknown as {
   PrismaPg: new (options: { connectionString: string }) => unknown;

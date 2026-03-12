@@ -15,7 +15,11 @@
     "seed:sources": "node ./scripts/sync-source-roster.mjs",
     "ingest:sources": "node ./scripts/run-ingest.mjs",
     "eval:clustering": "node ./scripts/run-clustering-eval.mjs",
-    "eval:clustering:repro": "node ./scripts/check-clustering-eval-repro.mjs"
+    "eval:clustering:repro": "node ./scripts/check-clustering-eval-repro.mjs",
+    "test:events": "node --test \"tests/events/*.test.mjs\"",
+    "cluster:regression": "node ./scripts/run-clustering-regression.mjs",
+    "events:run": "node ./scripts/run-event-pipeline.mjs",
+    "events:run:deterministic": "node ./scripts/run-event-pipeline.mjs --provider deterministic"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
