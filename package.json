@@ -21,6 +21,8 @@
     "eval:clustering:repro": "node ./scripts/check-clustering-eval-repro.mjs",
     "test:events": "node --test \"tests/events/*.test.mjs\"",
     "cluster:regression": "node ./scripts/run-clustering-regression.mjs --provider deterministic",
+    "cluster:shadow": "node ./scripts/run-clustering-shadow.mjs --provider deterministic",
+    "cluster:shadow:live": "node ./scripts/run-live-clustering-shadow.mjs --provider deterministic",
     "events:run": "node ./scripts/run-event-pipeline.mjs",
     "events:run:deterministic": "node ./scripts/run-event-pipeline.mjs --provider deterministic"
   },

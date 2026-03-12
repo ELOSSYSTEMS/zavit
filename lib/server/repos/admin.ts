@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/server/db/client.mjs";
+import { runEventPipeline } from "@/lib/events/pipeline.mjs";
+import { runIngestion } from "@/lib/ingest/run-ingest.mjs";
 import {
   getCaseActionAuditType,
   resolveCaseStatusTransition,
@@ -157,6 +159,25 @@ type AdminCaseStatus =
   | "SUPPRESSED"
   | "RESOLVED"
   | "REJECTED";
+
+export async function refreshAdminPipeline(input?: {
+  provider?: string;
+  anchorProvider?: string;
+}) {
+  const provider = input?.provider ?? process.env.CLUSTER_EMBED_PROVIDER ?? "gemini";
+  const anchorProvider = input?.anchorProvider ?? process.env.CLUSTER_ANCHOR_PROVIDER ?? "deterministic";
+  const ingestResult = await runIngestion({
+    prisma,
+    anchorProvider,
+    anchorExtractionEnabled: true,
+  });
+  const pipelineRun = await runEventPipeline(prisma, { provider });
+
+  return {
+    ingestResult,
+    pipelineRun,
+  };
+}
 
 export async function listAdminPipelineRuns(): Promise<AdminPipelineRun[]> {
   try {

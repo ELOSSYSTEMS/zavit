@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { logoutAdminAction } from "@/app/admin/actions";
+import { logoutAdminAction, refreshPipelineAction } from "@/app/admin/actions";
+import { RefreshPipelineButton } from "@/app/admin/pipeline/refresh-button";
 import { requireAdminSession } from "@/lib/admin/auth.mjs";
 import {
   listAdminPipelineRuns,
@@ -11,10 +12,32 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPipelinePage() {
+type AdminPipelinePageProps = {
+  searchParams?: Promise<{
+    refresh?: string | string[];
+    ingestStatus?: string | string[];
+    pipelineStatus?: string | string[];
+    blocked?: string | string[];
+    message?: string | string[];
+  }>;
+};
+
+function getSingleQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function AdminPipelinePage({
+  searchParams,
+}: AdminPipelinePageProps) {
+  const params = (await searchParams) ?? {};
   const session = (await requireAdminSession("REVIEWER", "/admin/pipeline"))!;
   const runs = await listAdminPipelineRuns();
   const audits = await listRecentOperatorAudits();
+  const refreshState = getSingleQueryValue(params.refresh);
+  const ingestStatus = getSingleQueryValue(params.ingestStatus);
+  const pipelineStatus = getSingleQueryValue(params.pipelineStatus);
+  const blocked = getSingleQueryValue(params.blocked) === "1";
+  const errorMessage = getSingleQueryValue(params.message);
 
   return (
     <main className="shell">
@@ -38,12 +61,37 @@ export default async function AdminPipelinePage() {
             <Link href="/admin/cases">Cases</Link>
             <Link href="/">Public feed</Link>
           </nav>
+          {session.role === "OPERATOR" ? (
+            <form action={refreshPipelineAction}>
+              <input name="redirectTo" type="hidden" value="/admin/pipeline" />
+              <RefreshPipelineButton />
+            </form>
+          ) : (
+            <p className="status-note">
+              Reviewer access is read-only. Operator role is required to refresh the intake and clustering pipeline.
+            </p>
+          )}
           <form action={logoutAdminAction}>
             <button className="form-button form-button--secondary" type="submit">
               Sign out
             </button>
           </form>
         </section>
+        {refreshState === "success" ? (
+          <section className={`status-note${blocked ? " status-note--warn" : ""}`}>
+            <p>
+              Pipeline refresh completed. Ingest: <span className="mono">{ingestStatus ?? "unknown"}</span> ·
+              event pipeline: <span className="mono">{pipelineStatus ?? "unknown"}</span>
+            </p>
+            {blocked ? <p>The event pipeline finished blocked. Review the latest run details below.</p> : null}
+          </section>
+        ) : null}
+        {refreshState === "error" ? (
+          <section className="status-note status-note--warn">
+            <p>Pipeline refresh failed.</p>
+            <p>{errorMessage ?? "Unknown pipeline refresh failure."}</p>
+          </section>
+        ) : null}
         <section className="panel">
           {runs.length === 0 ? (
             <p>No pipeline runs are available yet.</p>

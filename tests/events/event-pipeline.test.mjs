@@ -76,3 +76,63 @@ test("candidate summaries hold clusters that fail publish coherence", () => {
   assert.equal(candidates[0].confidenceState, "REVIEW");
   assert.match(candidates[0].coherenceReason, /full-cluster coherence/);
 });
+
+test("candidate summaries hold clusters with contradictory reliable anchor locations", () => {
+  const candidates = buildCandidateSummaries(
+    [
+      {
+        articleIds: ["a1", "a2", "a3"],
+        headline: "Mixed incident cluster",
+        confidenceScore: 0.996,
+        publishEligible: true,
+        overbroadCluster: false,
+        clusterCoherent: true,
+        minimumSimilarity: 0.66,
+      },
+    ],
+    new Map([
+      [
+        "a1",
+        {
+          source: { slug: "ynet" },
+          eventType: "stabbing",
+          locations: ["Ramat Gan"],
+          extractedDatetime: "2026-03-12T18:00:00Z",
+          anchorConfidence: 0.91,
+          anchorExtractionStatus: "OK",
+        },
+      ],
+      [
+        "a2",
+        {
+          source: { slug: "n12" },
+          eventType: "stabbing",
+          locations: ["Ramat Gan"],
+          extractedDatetime: "2026-03-12T18:04:00Z",
+          anchorConfidence: 0.92,
+          anchorExtractionStatus: "OK",
+        },
+      ],
+      [
+        "a3",
+        {
+          source: { slug: "haaretz" },
+          eventType: "stabbing",
+          locations: ["Jerusalem"],
+          extractedDatetime: "2026-03-12T18:06:00Z",
+          anchorConfidence: 0.94,
+          anchorExtractionStatus: "OK",
+        },
+      ],
+    ]),
+    new Map([
+      ["ynet", "g1"],
+      ["n12", "g2"],
+      ["haaretz", "g3"],
+    ]),
+  );
+
+  assert.equal(candidates[0].publishable, false);
+  assert.equal(candidates[0].confidenceState, "REVIEW");
+  assert.match(candidates[0].coherenceReason, /anchor locations/);
+});
