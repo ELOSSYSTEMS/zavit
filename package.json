@@ -8,12 +8,19 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "validate:sources": "node ./scripts/validate-source-roster.mjs"
+    "test": "node --test \"tests/ingest/*.test.mjs\"",
+    "validate:sources": "node ./scripts/validate-source-roster.mjs",
+    "db:push": "npx prisma db push",
+    "seed:sources": "node ./scripts/sync-source-roster.mjs",
+    "ingest:sources": "node ./scripts/run-ingest.mjs"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "7.5.0",
     "dotenv": "17.2.3",
     "next": "16.1.6",
+    "pg": "^8.20.0",
+    "playwright-core": "^1.58.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

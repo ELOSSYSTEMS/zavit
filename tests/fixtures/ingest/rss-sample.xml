@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Zavit Fixture Feed</title>
+    <item>
+      <title><![CDATA[ראש ממשלה קיים הערכת מצב]]></title>
+      <link>https://news.example.com/story/123?utm_source=test&amp;foo=bar</link>
+      <description><![CDATA[<p>תקציר בדיקה <strong>ללא גוף כתבה</strong></p>]]></description>
+      <pubDate>Thu, 12 Mar 2026 10:15:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Duplicate URL variant</title>
+      <link>https://news.example.com/story/123/?foo=bar&amp;utm_medium=email</link>
+      <description>Ignored duplicate item</description>
+      <pubDate>Thu, 12 Mar 2026 10:16:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
