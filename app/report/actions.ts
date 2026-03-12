@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import { prepareReportSubmission } from "@/lib/reports/workflow.mjs";
@@ -21,16 +20,63 @@ type ReportSubmissionArgs = {
   honeypot: string;
 };
 
+type ReportTypeValue =
+  | "BAD_CLUSTER"
+  | "WRONG_SOURCE"
+  | "BROKEN_LINK"
+  | "PUBLISHER_COMPLAINT"
+  | "PUBLISHER_OPT_OUT"
+  | "EMERGENCY_SUPPRESSION";
+
+type CaseStatusValue =
+  | "NEW"
+  | "ACKNOWLEDGED"
+  | "UNDER_REVIEW"
+  | "ACTION_REQUIRED"
+  | "SUPPRESSED"
+  | "RESOLVED"
+  | "REJECTED";
+
+type ReportCreateData = {
+  reportType: ReportTypeValue;
+  eventId: string | null;
+  sourceId: string | null;
+  status: CaseStatusValue;
+  payload: {
+    channel: string;
+    summary: string;
+    details: string;
+    eventPublicId: string | null;
+    sourceSlug: string | null;
+    honeypotTriggered: boolean;
+  };
+  abuseScore: number;
+  contactEmail: string | null;
+};
+
+type OperatorCaseCreateData = {
+  caseType: ReportTypeValue;
+  status: CaseStatusValue;
+  eventId: string | null;
+  sourceId: string | null;
+  notes: string;
+};
+
 type PreparedReportSubmissionSuccess = {
   ok: true;
-  correctionReportData: Prisma.CorrectionReportUncheckedCreateInput;
-  operatorCaseData: Prisma.OperatorCaseUncheckedCreateInput;
+  correctionReportData: ReportCreateData;
+  operatorCaseData: OperatorCaseCreateData;
 };
 
 type PreparedReportSubmissionFailure = {
   ok: false;
   error: string;
 };
+
+type ReportTransactionClient = Pick<
+  typeof prisma,
+  "correctionReport" | "operatorCase"
+>;
 
 async function findEventIdByPublicId(publicId: string) {
   if (!publicId) {
@@ -99,7 +145,7 @@ async function createReportAndCase({
     return prepared;
   }
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: ReportTransactionClient) => {
     const report = await tx.correctionReport.create({
       data: prepared.correctionReportData,
     });
