@@ -98,10 +98,24 @@ export async function getPublishedEventDetail(
   publicId: string,
 ): Promise<PublishedEventDetail | null> {
   try {
+    const latestRun = await prisma.pipelineRun.findFirst({
+      where: {
+        runType: "FULL",
+        status: "SUCCEEDED",
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+
+    if (!latestRun) {
+      return null;
+    }
+
     const event: PublishedEventDetail | null = await prisma.event.findFirst({
       where: {
         publicId,
         status: "PUBLISHED",
+        publishRunId: latestRun.id,
       },
       select: {
         publicId: true,
