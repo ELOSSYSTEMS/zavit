@@ -71,3 +71,40 @@ test("embedTexts parses multi-item Gemini batchEmbedContents responses", async (
     globalThis.fetch = originalFetch;
   }
 });
+
+test("embedTexts chunks Gemini batch requests above the API limit", async () => {
+  const originalFetch = globalThis.fetch;
+  const requestSizes = [];
+
+  globalThis.fetch = async (_url, options) => {
+    const payload = JSON.parse(String(options.body));
+    requestSizes.push(payload.requests.length);
+
+    return new Response(
+      JSON.stringify({
+        embeddings: payload.requests.map((_request, index) => ({
+          values: [index],
+        })),
+      }),
+      {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      },
+    );
+  };
+
+  try {
+    const texts = Array.from({ length: 101 }, (_value, index) => `text-${index}`);
+    const vectors = await embedTexts(texts, {
+      provider: "gemini",
+      apiKey: "test-key",
+    });
+
+    assert.deepEqual(requestSizes, [100, 1]);
+    assert.equal(vectors.length, 101);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
