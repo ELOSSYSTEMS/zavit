@@ -1,0 +1,22 @@
+{
+  "datasetVersion": "2026-03-12.v1",
+  "runLabel": "fixture-sample-pass",
+  "predictedGroups": [
+    {
+      "id": "p-sderot-alert",
+      "publishEligible": true,
+      "articleIds": ["a1", "a2", "a3"]
+    },
+    {
+      "id": "p-budget-vote",
+      "publishEligible": true,
+      "articleIds": ["a4", "a5", "a6"]
+    },
+    {
+      "id": "p-highway-6-bus-crash",
+      "publishEligible": true,
+      "articleIds": ["a7", "a8", "a9"]
+    }
+  ],
+  "heldArticleIds": ["a10", "a11", "a12"]
+}

@@ -1,0 +1,135 @@
+{
+  "datasetVersion": "2026-03-12.v1",
+  "description": "Step 6 seed dataset for metadata-only clustering evaluation across Hebrew, English, and Arabic coverage.",
+  "articles": [
+    {
+      "id": "a1",
+      "sourceSlug": "ynet",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-10T08:05:00Z",
+      "headline": "Schools in Sderot open late after morning rocket alert",
+      "snippet": "The municipality delayed classes after alerts near the Gaza border."
+    },
+    {
+      "id": "a2",
+      "sourceSlug": "n12",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-10T08:12:00Z",
+      "headline": "Rocket alert heard in Sderot area, classes delayed",
+      "snippet": "Local officials said schools would start later after the warning siren."
+    },
+    {
+      "id": "a3",
+      "sourceSlug": "makan",
+      "language": "ARABIC",
+      "publishedAt": "2026-03-10T08:18:00Z",
+      "headline": "Sirens near Sderot force delayed school opening",
+      "snippet": "Coverage in Arabic on the same morning alert and education disruption."
+    },
+    {
+      "id": "a4",
+      "sourceSlug": "globes",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-09T18:40:00Z",
+      "headline": "Cabinet backs revised state budget after late-night vote",
+      "snippet": "Finance officials said the coalition approved the updated budget outline."
+    },
+    {
+      "id": "a5",
+      "sourceSlug": "kan-news",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-09T18:52:00Z",
+      "headline": "Coalition clears revised budget framework in overnight session",
+      "snippet": "Report says ministers voted after negotiations over spending changes."
+    },
+    {
+      "id": "a6",
+      "sourceSlug": "haaretz",
+      "language": "ENGLISH",
+      "publishedAt": "2026-03-09T19:04:00Z",
+      "headline": "Israeli cabinet approves updated budget package",
+      "snippet": "English coverage of the same budget decision and coalition compromises."
+    },
+    {
+      "id": "a7",
+      "sourceSlug": "walla",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-08T06:20:00Z",
+      "headline": "Bus overturns on Highway 6, several passengers injured",
+      "snippet": "Rescue teams treated multiple injuries after an early-morning crash."
+    },
+    {
+      "id": "a8",
+      "sourceSlug": "maariv",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-08T06:31:00Z",
+      "headline": "Highway 6 bus crash sends passengers to hospital",
+      "snippet": "Police closed lanes while medics evacuated the injured."
+    },
+    {
+      "id": "a9",
+      "sourceSlug": "israel-hayom",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-08T06:45:00Z",
+      "headline": "Several hurt after bus accident on Route 6",
+      "snippet": "A similar incident report covering the same crash and injury count."
+    },
+    {
+      "id": "a10",
+      "sourceSlug": "makor-rishon",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-07T20:10:00Z",
+      "headline": "Organizers call for a Jerusalem protest next week",
+      "snippet": "Advance notice about a planned demonstration, not a completed event."
+    },
+    {
+      "id": "a11",
+      "sourceSlug": "davar",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-07T20:28:00Z",
+      "headline": "Activists announce a separate Tel Aviv protest for Monday",
+      "snippet": "Another protest announcement with similar political framing but different city and date."
+    },
+    {
+      "id": "a12",
+      "sourceSlug": "kikar-hashabbat",
+      "language": "HEBREW",
+      "publishedAt": "2026-03-07T11:00:00Z",
+      "headline": "Single-source rumor claims minister may resign",
+      "snippet": "Unconfirmed report without independent corroboration."
+    }
+  ],
+  "groups": [
+    {
+      "id": "g-sderot-alert",
+      "label": "Rocket alert near Sderot delays school opening",
+      "publishEligible": true,
+      "articleIds": ["a1", "a2", "a3"]
+    },
+    {
+      "id": "g-budget-vote",
+      "label": "Cabinet approves revised state budget package",
+      "publishEligible": true,
+      "articleIds": ["a4", "a5", "a6"]
+    },
+    {
+      "id": "g-highway-6-bus-crash",
+      "label": "Bus crash on Highway 6 injures multiple passengers",
+      "publishEligible": true,
+      "articleIds": ["a7", "a8", "a9"]
+    }
+  ],
+  "holdArticleIds": ["a10", "a11", "a12"],
+  "hardNegativePairs": [
+    {
+      "left": "a10",
+      "right": "a11",
+      "reason": "Similar protest framing but different city and planned date."
+    },
+    {
+      "left": "a7",
+      "right": "a10",
+      "reason": "Shared transport or location tokens would be a false merge across unrelated incidents."
+    }
+  ]
+}
