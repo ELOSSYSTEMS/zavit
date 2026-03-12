@@ -162,9 +162,15 @@ type AdminCaseStatus =
 
 export async function refreshAdminPipeline(input?: {
   provider?: string;
+  anchorProvider?: string;
 }) {
   const provider = input?.provider ?? process.env.CLUSTER_EMBED_PROVIDER ?? "gemini";
-  const ingestResult = await runIngestion({ prisma });
+  const anchorProvider = input?.anchorProvider ?? process.env.CLUSTER_ANCHOR_PROVIDER ?? "deterministic";
+  const ingestResult = await runIngestion({
+    prisma,
+    anchorProvider,
+    anchorExtractionEnabled: true,
+  });
   const pipelineRun = await runEventPipeline(prisma, { provider });
 
   return {
