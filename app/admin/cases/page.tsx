@@ -7,7 +7,42 @@ import { getSlaState } from "@/lib/reports/workflow.mjs";
 
 export const dynamic = "force-dynamic";
 
-async function getOperatorCases() {
+type AdminOperatorCase = {
+  id: string;
+  caseType: string;
+  status: string;
+  reportId: string | null;
+  eventId: string | null;
+  sourceId: string | null;
+  assignedRole: string | null;
+  assignedTo: string | null;
+  acknowledgementBy: string | null;
+  acknowledgementAt: Date | null;
+  resolutionBy: string | null;
+  resolutionAt: Date | null;
+  emergencySuppressedAt: Date | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  report: {
+    contactEmail: string | null;
+    abuseScore: number | null;
+    payload: unknown;
+  } | null;
+  event: {
+    id: string;
+    publicId: string;
+    status: string;
+  } | null;
+  source: {
+    id: string;
+    displayName: string;
+    slug: string;
+    enabled: boolean;
+  } | null;
+};
+
+async function getOperatorCases(): Promise<AdminOperatorCase[]> {
   try {
     return await prisma.operatorCase.findMany({
       orderBy: { updatedAt: "desc" },
