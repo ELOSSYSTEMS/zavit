@@ -15,13 +15,14 @@
 ## Cleared Questions
 
 - The clustering code now emits the Step 6 harness artifact format through [run-clustering-regression.mjs](../../../../scripts/run-clustering-regression.mjs)
-- The live pipeline uses Gemini embeddings through [embeddings.mjs](../../../../lib/clustering/embeddings.mjs)
+- The event pipeline can be verified safely through the deterministic provider path while keeping the Gemini provider path available in [embeddings.mjs](../../../../lib/clustering/embeddings.mjs)
 - Publish snapshots are now the concrete public-read boundary for the current app routes
 
 ## Stop Conditions
 
 - Do not expose events publicly from draft or held state
 - Do not bypass the Step 6 regression harness when changing clustering or publish rules
+- Do not treat the unverified Gemini provider path as release-ready evidence yet
 - Do not treat the current conservative live yield as final clustering quality; future tuning still requires evidence
 
 ## Required Next Action

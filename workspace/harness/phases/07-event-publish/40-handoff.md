@@ -18,7 +18,7 @@ Before Step 8 work, read these first:
 
 - Public reads must continue to use only `PUBLISHED` events and latest successful run snapshots
 - The Step 6 regression harness remains mandatory for clustering changes
-- The live Step 7 provider baseline is Gemini embeddings via `GEMINI_API_KEY`
+- The verified Step 7 provider baseline is the deterministic path; the Gemini path exists but is not yet implementation-verified
 - Incomplete ingest coverage must continue to block publish before snapshot writes
 
 ## Open Questions

@@ -4,7 +4,7 @@
 
 - `npm run test:events`
 - `npm run cluster:regression`
-- `npm run events:run`
+- `npm run events:run:deterministic`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
@@ -19,13 +19,13 @@
 ## Results
 
 - `npm run test:events`: passed
-- `npm run cluster:regression`: passed with provider `gemini`
+- `npm run cluster:regression`: passed with provider `deterministic`
   - false merge rate: `0.0000`
   - hold rate: `0.0000`
   - publish-eligible precision: `1.0000`
   - publish-eligible recall: `1.0000`
-- `npm run events:run`: passed
-  - run id: `cmmnszbno0000ncbfbyzs9i8k`
+- `npm run events:run:deterministic`: passed
+  - run id: `cmmnt0ua10000pgbftodjqfc1`
   - status: `SUCCEEDED`
   - held events: `5`
   - published events: `1`
@@ -36,6 +36,7 @@
 ## Failures And Warnings
 
 - The hosted Postgres connection string still emits a non-blocking `pg` SSL-mode warning
+- The Gemini provider path was not exercised in Step 7 verification to avoid unapproved billed API use
 - The latest successful full run published only one event, which indicates the current Step 7 heuristics are conservative
 
 ## Residual Risk

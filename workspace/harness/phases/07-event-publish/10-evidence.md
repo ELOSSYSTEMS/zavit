@@ -28,11 +28,12 @@
 
 ## Findings That Affect Later Steps
 
-- The Step 6 regression harness now passes against the real Step 7 clustering code with the live Gemini provider.
-- The latest successful full pipeline run `cmmnszbno0000ncbfbyzs9i8k` persisted one published event snapshot and five held events from 137 ingested articles.
+- The Step 6 regression harness now passes against the real Step 7 clustering code with the deterministic verification provider.
+- The latest successful full pipeline run `cmmnt0ua10000pgbftodjqfc1` persisted one published event snapshot and five held events from 137 ingested articles.
 - Public routes now fail closed by reading only from the latest successful `FULL` run snapshots or `PUBLISHED` events.
 - The publish gate blocks before snapshot writes when ingest coverage is incomplete or the Step 6 regression harness fails.
 - Current clustering remains conservative: only one event published from the latest run, and several candidates stayed held for admin review.
+- The Gemini provider path exists in code but was not exercised in Step 7 verification to avoid unapproved billed API use.
 
 ## Deviations From Plan
 
