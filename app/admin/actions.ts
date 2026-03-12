@@ -1,6 +1,5 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -24,6 +23,16 @@ import {
 function getFormValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
+
+type AdminTransactionClient = Pick<
+  typeof prisma,
+  | "source"
+  | "sourceHealth"
+  | "operatorActionAudit"
+  | "event"
+  | "operatorCase"
+  | "correctionReport"
+>;
 
 export async function loginAdminAction(formData: FormData) {
   const nextPath = normalizeAdminNextPath(
@@ -65,7 +74,7 @@ export async function toggleSourceAvailabilityAction(formData: FormData) {
 
   const disabling = operation === "disable";
 
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  await prisma.$transaction(async (tx: AdminTransactionClient) => {
     await tx.source.update({
       where: { id: sourceId },
       data: {
@@ -130,7 +139,7 @@ export async function toggleEventSuppressionAction(formData: FormData) {
 
   const suppressing = operation === "suppress";
 
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  await prisma.$transaction(async (tx: AdminTransactionClient) => {
     await tx.event.update({
       where: { id: event.id },
       data: suppressing
@@ -245,7 +254,7 @@ export async function updateOperatorCaseStatusAction(formData: FormData) {
     updateData.emergencySuppressedAt = now;
   }
 
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  await prisma.$transaction(async (tx: AdminTransactionClient) => {
     await tx.operatorCase.update({
       where: { id: operatorCase.id },
       data: updateData,
