@@ -237,6 +237,15 @@ model Article {
   headline         String
   snippet          String?
   publishedAt      DateTime?
+  eventType        String?
+  locations        Json?
+  extractedDatetime DateTime?
+  actors           Json?
+  anchorKeywords   Json?
+  anchorConfidence Float?
+  anchorExtractionVersion String?
+  anchorExtractionStatus  String?
+  anchorRaw        Json?
   fetchedAt        DateTime       @default(now())
   language         SourceLanguage
   paywallFlag      Boolean        @default(false)
