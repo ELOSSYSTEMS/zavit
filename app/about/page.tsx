@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function AboutPage() {
   return (
     <main className="shell">
@@ -16,6 +18,10 @@ export default function AboutPage() {
             <span className="badge">Event-centric</span>
             <span className="badge">No public angles in v1</span>
           </div>
+          <p>
+            Need to report a correction, publisher complaint, or suppression request?{" "}
+            <Link href="/report">Open the report flow</Link>.
+          </p>
         </section>
       </section>
     </main>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/db/prisma";
@@ -60,6 +61,9 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.publishedSnapshot?.warningLabel ?? "none"}
           </p>
           <p>updated: {event.lastUpdatedAt.toISOString()}</p>
+          <p>
+            <Link href={`/report?event=${event.publicId}`}>Report a correction or complaint</Link>
+          </p>
         </section>
         <section className="panel">
           <h2>Coverage</h2>

@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test \"tests/ingest/*.test.mjs\"",
     "test:evaluation": "node --test \"tests/evaluation/*.test.mjs\"",
+    "test:admin": "node --test \"tests/admin/*.test.mjs\"",
+    "test:reports": "node --test \"tests/reports/*.test.mjs\"",
     "validate:sources": "node ./scripts/validate-source-roster.mjs",
     "db:push": "npx prisma db push",
     "seed:sources": "node ./scripts/sync-source-roster.mjs",
