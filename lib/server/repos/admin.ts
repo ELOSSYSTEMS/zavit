@@ -80,6 +80,7 @@ export type AdminEventDetail = {
     id: string;
     membershipRole: string;
     membershipReason: string | null;
+    evidenceSummary: string | null;
     article: {
       headline: string;
       snippet: string | null;
@@ -357,6 +358,7 @@ export async function getAdminEventDetail(
             id: true,
             membershipRole: true,
             membershipReason: true,
+            evidenceSummary: true,
             article: {
               select: {
                 headline: true,
@@ -418,6 +420,7 @@ export async function getAdminEventDetail(
         id: membership.id,
         membershipRole: membership.membershipRole,
         membershipReason: membership.membershipReason,
+        evidenceSummary: membership.evidenceSummary,
         article: {
           headline: membership.article.headline,
           snippet: membership.article.snippet,

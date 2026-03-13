@@ -122,6 +122,14 @@ export default async function AdminEventPage({
                   </p>
                   <p>{membership.article.snippet ?? "No snippet"}</p>
                   <p>reason: {membership.membershipReason ?? "none"}</p>
+                  {membership.evidenceSummary ? (
+                    <details>
+                      <summary>Show clustering evidence</summary>
+                      <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                        {membership.evidenceSummary}
+                      </pre>
+                    </details>
+                  ) : null}
                 </li>
               ))}
             </ul>

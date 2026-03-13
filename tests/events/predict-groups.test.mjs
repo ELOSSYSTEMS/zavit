@@ -84,6 +84,10 @@ test("predictEventGroups still clusters coherent multi-source coverage of the sa
   assert.equal(result.groups.length, 1);
   assert.deepEqual(result.groups[0].articleIds, ["sd-1", "sd-2", "sd-3"]);
   assert.equal(result.groups[0].clusterCoherent, true);
+  assert.equal(result.groups[0].debug.clusterFacts.articleCount, 3);
+  assert.ok(result.groups[0].debug.strongestPairs.length >= 1);
+  assert.equal(result.groups[0].debug.articleSupport.length, 3);
+  assert.match(result.groups[0].debug.strongestPairs[0].relationship, /direct-merge|coherence-support/);
 });
 
 test("predictEventGroups blocks merges when high-confidence anchor locations contradict", async () => {
